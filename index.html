@@ -87,7 +87,7 @@
         const currentSlide = Math.round(gallery.scrollLeft / gallery.clientWidth)
         const nextSlide = (currentSlide + 1) % slides.length
         gallery.scrollTo({ left: nextSlide * gallery.clientWidth, behavior: 'smooth' })
-      }, 7000)
+      }, 3000)
     }
     gallery.addEventListener('pointerenter', () => window.clearInterval(carouselTimer))
     gallery.addEventListener('pointerleave', restartCarousel)
