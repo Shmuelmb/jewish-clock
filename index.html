@@ -17,7 +17,7 @@
     .price-stack{display:flex;flex-direction:column;align-items:center}.old-price{display:block;font-size:24px;line-height:1.4;font-weight:400;color:var(--muted);text-decoration-thickness:2px}.closing-price{display:flex;flex-direction:column;align-items:flex-start}.closing-price strong{font-size:36px;font-weight:600} @media(max-width:700px){.closing-price{align-items:center}footer{padding-bottom:24px}}
     header{gap:20px}.brand{white-space:nowrap;color:var(--green)}.brand svg{flex-shrink:0}.nav-cta{display:inline-flex;align-items:center;justify-content:center}@media(max-width:700px){header{gap:12px}.brand{font-size:26px;gap:8px}.brand svg{width:28px;height:28px}.nav-cta{padding-inline:12px}}@media(max-width:360px){header{flex-direction:column;justify-content:center;padding-block:16px;gap:12px}.brand{font-size:28px}header nav{width:100%}.nav-cta{width:100%}}
     h1 span{display:block;font-size:.6em;line-height:1.45;letter-spacing:0;margin-top:12px}.delivery{font-size:20px;color:var(--muted)}
-    .gallery{display:flex;direction:ltr;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none}.gallery::-webkit-scrollbar{display:none}.slide{direction:rtl;flex:0 0 100%;min-width:0;margin:0;scroll-snap-align:start}.product .slide img{width:100%;height:auto;aspect-ratio:2.2;object-fit:contain}.gallery-controls{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:16px}.gallery-controls button{min-height:48px;font:inherit;font-size:18px;padding:8px 18px;border:1px solid #87947f;border-radius:6px;background:transparent;color:var(--ink);cursor:pointer}.gallery-controls button[aria-pressed="true"]{background:var(--green);color:white;border-color:var(--green)}.gallery-controls button:focus-visible,.gallery:focus-visible{outline:3px solid var(--green);outline-offset:4px}@media(max-width:360px){.gallery-controls{gap:7px}.gallery-controls button{padding-inline:10px}}
+    .gallery{display:flex;direction:ltr;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none}.gallery::-webkit-scrollbar{display:none}.slide{direction:rtl;flex:0 0 100%;min-width:0;margin:0;scroll-snap-align:start}.product .slide img{width:100%;height:auto;aspect-ratio:2.2;object-fit:contain}@media(max-width:360px){}
     @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
   </style>
 </head>
@@ -33,11 +33,6 @@
           <figure class="slide"><img src="assets/clock-synagogue-wide.png" loading="lazy" alt="הדמיית השעון בבית כנסת, מבט רחב"><figcaption>בית כנסת · הדמיה להמחשה</figcaption></figure>
           <figure class="slide"><img src="assets/clock-synagogue-close.png" loading="lazy" alt="הדמיית השעון על קיר שיש בבית כנסת"><figcaption>ליד ארון הקודש · הדמיה להמחשה</figcaption></figure>
         </div>
-        <div class="gallery-controls" aria-label="בחירת תמונה">
-          <button type="button" data-slide="0" aria-pressed="true">המוצר</button>
-          <button type="button" data-slide="1" aria-pressed="false">בית כנסת</button>
-          <button type="button" data-slide="2" aria-pressed="false">ארון הקודש</button>
-        </div>
       </div>
       <div class="offer"><div class="price-stack"><del class="old-price" aria-label="מחיר קודם 1300 שקלים">1,300 ₪</del><div class="price" aria-label="מחיר מוזל 699 שקלים">699 <small>₪</small></div></div><span class="shipping">כולל משלוח</span><span class="delivery">אספקה עד 7 ימי עסקים</span></div>
       <a class="cta whatsapp" href="https://wa.me/972545627799"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 11.7a8.5 8.5 0 0 1-12.6 7.5L3 20.5l1.3-4.7a8.5 8.5 0 1 1 16.2-4.1Z"/><path d="M8 7.5c0 4 4.5 8.5 8 8l1-2-2.5-1-1 1c-1.8-.8-3-2-3.5-3.5l1-1L10 6.5Z"/></svg>לפרטים ולהזמנה בוואטסאפ<span aria-hidden="true">↖</span></a>
@@ -51,18 +46,27 @@
   </main>
   <script>
     const gallery = document.querySelector('.gallery')
-    const galleryButtons = document.querySelectorAll('[data-slide]')
-    galleryButtons.forEach(button => {
-      button.addEventListener('click', () => {
-        gallery.scrollTo({ left: Number(button.dataset.slide) * gallery.clientWidth })
-      })
-    })
-    gallery.addEventListener('scroll', () => {
-      const selected = Math.round(gallery.scrollLeft / gallery.clientWidth)
-      galleryButtons.forEach(button => {
-        button.setAttribute('aria-pressed', String(Number(button.dataset.slide) === selected))
-      })
-    })
+    const slides = gallery.querySelectorAll('.slide')
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
+    let carouselTimer
+    function restartCarousel() {
+      window.clearInterval(carouselTimer)
+      if (reducedMotion.matches || document.hidden || gallery.matches(':hover, :focus-within')) return
+      carouselTimer = window.setInterval(() => {
+        const currentSlide = Math.round(gallery.scrollLeft / gallery.clientWidth)
+        const nextSlide = (currentSlide + 1) % slides.length
+        gallery.scrollTo({ left: nextSlide * gallery.clientWidth, behavior: 'smooth' })
+      }, 7000)
+    }
+    gallery.addEventListener('pointerenter', () => window.clearInterval(carouselTimer))
+    gallery.addEventListener('pointerleave', restartCarousel)
+    gallery.addEventListener('focusin', () => window.clearInterval(carouselTimer))
+    gallery.addEventListener('focusout', restartCarousel)
+    gallery.addEventListener('touchstart', () => window.clearInterval(carouselTimer), { passive: true })
+    gallery.addEventListener('touchend', restartCarousel, { passive: true })
+    document.addEventListener('visibilitychange', restartCarousel)
+    reducedMotion.addEventListener('change', restartCarousel)
+    restartCarousel()
     const message = 'שלום, אשמח לפרטים על שעון הקיר עם התאריך העברי ב־699 ₪ כולל משלוח.'
     document.querySelectorAll('.whatsapp').forEach(link => {
       link.href = `https://wa.me/972545627799?text=${encodeURIComponent(message)}`
